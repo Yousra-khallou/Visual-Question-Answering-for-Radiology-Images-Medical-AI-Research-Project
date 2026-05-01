@@ -1,0 +1,127 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--color-text-primary); }
+.section-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--color-text-tertiary); margin-bottom: 8px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.card { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; cursor: pointer; transition: border-color .15s; }
+.card:hover { border-color: var(--color-border-primary); }
+.card-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.card-sub { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
+.b-gray   { background: #D3D1C7; color: #444441; }
+.b-teal   { background: #9FE1CB; color: #085041; }
+.b-purple { background: #CECBF6; color: #3C3489; }
+.b-amber  { background: #FAC775; color: #633806; }
+.b-blue   { background: #B5D4F4; color: #0C447C; }
+.section  { margin-bottom: 20px; }
+.arrow-row { display: flex; align-items: center; justify-content: center; color: var(--color-text-tertiary); font-size: 18px; margin: 4px 0 12px; }
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.tag { font-size: 11px; background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 2px 6px; color: var(--color-text-secondary); }
+</style>
+
+<h2 class="sr-only">Vue d'ensemble du projet VQA Radiology — datasets, modèles à entraîner et stratégie de comparaison</h2>
+
+<div style="padding: 4px 0 20px">
+
+  <div class="section">
+    <div class="section-title">Étape 1 — Choix du dataset</div>
+    <div class="grid-3">
+      <div class="card" onclick="sendPrompt('Explique-moi VQA-RAD en détail : taille, types de questions, format, et pourquoi choisir ce dataset pour un projet académique')">
+        <div class="badge b-teal">Recommandé débutant</div>
+        <div class="card-title">VQA-RAD</div>
+        <div class="card-sub">3 515 Q&A sur 315 images CT/MRI. Questions fermées (oui/non, choix) et ouvertes.</div>
+        <div class="tag-row"><span class="tag">315 images</span><span class="tag">3 515 Q&A</span><span class="tag">CT / MRI</span></div>
+      </div>
+      <div class="card" onclick="sendPrompt('Explique-moi PathVQA en détail : taille, types de questions, format, avantages et inconvénients pour un projet académique')">
+        <div class="badge b-gray">Pathologie</div>
+        <div class="card-title">PathVQA</div>
+        <div class="card-sub">32 799 Q&A sur images histologiques. Plus grand, mais domaine différent (lames).</div>
+        <div class="tag-row"><span class="tag">5 000 images</span><span class="tag">32 k Q&A</span><span class="tag">Histologie</span></div>
+      </div>
+      <div class="card" onclick="sendPrompt('Explique-moi SLAKE en détail : son format bilingue, sa taille et pourquoi l utiliser pour VQA médical')">
+        <div class="badge b-gray">Bilingue</div>
+        <div class="card-title">SLAKE</div>
+        <div class="card-sub">14 000 Q&A en anglais et chinois. Annoté avec knowledge graph médical.</div>
+        <div class="tag-row"><span class="tag">642 images</span><span class="tag">14 k Q&A</span><span class="tag">EN + ZH</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">↓</div>
+
+  <div class="section">
+    <div class="section-title">Étape 2 — Modèles à entraîner (du plus simple au plus fort)</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+
+      <div class="card" onclick="sendPrompt('Explique les 3 baselines triviales pour VQA médical : majority class, random guess, et texte seul BERT. Pourquoi sont-elles nécessaires dans un papier académique ?')">
+        <div class="badge b-gray">Niveau 1 — Plancher</div>
+        <div class="card-title">Baselines triviales</div>
+        <div class="card-sub">Majority class · Random guess · Texte seul (BERT sans image). Établissent le score plancher. Indispensables dans tout papier académique pour montrer que ton modèle apprend réellement.</div>
+      </div>
+
+      <div class="card" onclick="sendPrompt('Explique la baseline CNN + LSTM pour VQA médical : comment ResNet extrait les features image, comment LSTM encode la question, et comment on les fusionne par concaténation')">
+        <div class="badge b-teal">Niveau 2 — Référence classique</div>
+        <div class="card-title">CNN + LSTM + concat</div>
+        <div class="card-sub">ResNet-50 (image) + LSTM (question) → concaténation → MLP. C'est la baseline "classique" citée dans presque tous les papiers VQA-RAD. Simple à implémenter, résultats connus.</div>
+      </div>
+
+      <div class="card" onclick="sendPrompt('Explique SAN (Stacked Attention Networks) pour VQA : comment ça marche, pourquoi c est mieux que la simple concaténation, et comment l adapter pour la radiologie')">
+        <div class="badge b-teal">Niveau 3 — Attention classique</div>
+        <div class="card-title">SAN / BAN (attention)</div>
+        <div class="card-sub">Stacked Attention Networks ou Bilinear Attention. La question "guide" le regard sur l'image. Premier vrai mécanisme d'attention, publié sur VQA-RAD avec scores disponibles.</div>
+      </div>
+
+      <div class="card" onclick="sendPrompt('Explique comment fine-tuner CLIP ou VisualBERT pour VQA radiology : quelle tête de classification ajouter, combien d époques, quels hyperparamètres typiques ?')">
+        <div class="badge b-purple">Niveau 4 — Transformer généraliste</div>
+        <div class="card-title">CLIP / VisualBERT fine-tuné</div>
+        <div class="card-sub">Modèle pré-entraîné sur données générales, fine-tuné sur VQA-RAD. C'est ton modèle "principal" si tu n'as pas de contrainte GPU forte. Très bon compromis perf / effort.</div>
+      </div>
+
+      <div class="card" onclick="sendPrompt('Explique BioMedCLIP et LLaVA-Med pour VQA radiology : comment les utiliser, ce qu ils apportent par rapport à CLIP généraliste, et dans quel contexte les choisir')">
+        <div class="badge b-amber">Niveau 5 — SOTA médical (optionnel)</div>
+        <div class="card-title">BioMedCLIP / LLaVA-Med</div>
+        <div class="card-sub">Pré-entraînés sur littérature médicale. Niveau état de l'art. À inclure si tu veux te comparer au SOTA, mais demande plus de ressources GPU.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="arrow-row">↓</div>
+
+  <div class="section">
+    <div class="section-title">Étape 3 — Ce que tu compares (métriques)</div>
+    <div class="grid-2">
+      <div class="card" onclick="sendPrompt('Comment calculer l accuracy et le F1-score pour VQA médical avec questions fermées et ouvertes ? Quelle est la différence entre closed et open accuracy dans les papiers VQA-RAD ?')">
+        <div class="badge b-blue">Questions fermées</div>
+        <div class="card-title">Accuracy + F1</div>
+        <div class="card-sub">Pour oui/non et questions à choix. Métrique principale dans les papiers VQA-RAD. Séparer closed-ended et open-ended accuracy.</div>
+      </div>
+      <div class="card" onclick="sendPrompt('Comment utiliser BLEU et ROUGE pour évaluer les réponses ouvertes en VQA médical ? Sont-elles suffisantes ou faut-il d autres métriques ?')">
+        <div class="badge b-blue">Questions ouvertes</div>
+        <div class="card-title">BLEU / ROUGE</div>
+        <div class="card-sub">Pour les réponses textuelles libres. BLEU-1 et ROUGE-L sont les plus courants dans les papiers médicaux.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">↓</div>
+
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title">Étape 4 — Stratégie papier académique</div>
+    <div class="card" onclick="sendPrompt('Comment structurer la section expérimentale d un papier académique sur VQA radiology : quels tableaux de résultats, quelles ablations faire, comment présenter la comparaison avec les baselines ?')">
+      <div class="badge b-purple">Structure recommandée</div>
+      <div class="card-title">Tableau de résultats comparatif</div>
+      <div class="card-sub">Ton papier doit montrer : Niveau 1 → Niveau 2 → Niveau 3 → ton modèle (Niveau 4). Chaque ligne du tableau prouve un gain. Les ablations (retirer l'image, retirer l'attention…) justifient chaque composant de ton architecture.</div>
+    </div>
+  </div>
+
+</div>
+<script>
+document.querySelectorAll('.card').forEach(c => {
+  c.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') c.click(); });
+  c.setAttribute('tabindex','0');
+  c.setAttribute('role','button');
+});
+</script>

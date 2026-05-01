@@ -1,0 +1,132 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.section{margin-bottom:24px}
+.section-label{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px}
+.metric-val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.metric-lbl{font-size:12px;color:var(--color-text-secondary);margin-top:3px}
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:var(--color-border-primary)}
+.card-title{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px}
+.card-body{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-bottom:6px}
+.b-teal{background:#9FE1CB;color:#085041}
+.b-purple{background:#CECBF6;color:#3C3489}
+.b-amber{background:#FAC775;color:#633806}
+.b-gray{background:#D3D1C7;color:#444441}
+.b-blue{background:#B5D4F4;color:#0C447C}
+.example-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:10px}
+.q-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:4px}
+.q-text{font-size:13px;color:var(--color-text-primary);margin-bottom:6px}
+.a-row{display:flex;align-items:center;gap:8px}
+.a-badge{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.a-closed{background:#E1F5EE;color:#085041}
+.a-open{background:#EEEDFE;color:#3C3489}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-label{font-size:12px;color:var(--color-text-secondary);width:110px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:14px;background:var(--color-background-tertiary);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.bar-val{font-size:12px;color:var(--color-text-secondary);width:36px;text-align:left}
+.pro-con{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pc-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+.pc-title{font-size:13px;font-weight:500;margin-bottom:8px}
+.pc-item{font-size:12px;color:var(--color-text-secondary);line-height:1.6;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pc-item:last-child{border-bottom:none}
+.dot-good{color:#1D9E75}
+.dot-warn{color:#BA7517}
+</style>
+
+<h2 class="sr-only">Fiche détaillée du dataset VQA-RAD : statistiques, types de questions, format et avantages académiques</h2>
+
+<div style="padding:4px 0 0">
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val">315</div><div class="metric-lbl">images radiologiques</div></div>
+    <div class="metric"><div class="metric-val">3 515</div><div class="metric-lbl">paires Q&A totales</div></div>
+    <div class="metric"><div class="metric-val">11,2</div><div class="metric-lbl">questions par image (moy.)</div></div>
+    <div class="metric"><div class="metric-val">3</div><div class="metric-lbl">modalités (CT, MRI, RX)</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Répartition des modalités</div>
+    <div class="bar-row"><div class="bar-label">CT scan</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#5DCAA5"></div></div><div class="bar-val">40%</div></div>
+    <div class="bar-row"><div class="bar-label">MRI</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#AFA9EC"></div></div><div class="bar-val">37%</div></div>
+    <div class="bar-row"><div class="bar-label">Radiographie X</div><div class="bar-track"><div class="bar-fill" style="width:23%;background:#FAC775"></div></div><div class="bar-val">23%</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Questions fermées vs ouvertes</div>
+    <div class="bar-row"><div class="bar-label">Fermées (closed)</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:#5DCAA5"></div></div><div class="bar-val">58%</div></div>
+    <div class="bar-row"><div class="bar-label">Ouvertes (open)</div><div class="bar-track"><div class="bar-fill" style="width:42%;background:#AFA9EC"></div></div><div class="bar-val">42%</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Types de questions (catégories principales)</div>
+    <div class="bar-row"><div class="bar-label">Présence/absence</div><div class="bar-track"><div class="bar-fill" style="width:35%;background:#5DCAA5"></div></div><div class="bar-val">35%</div></div>
+    <div class="bar-row"><div class="bar-label">Localisation</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#5DCAA5"></div></div><div class="bar-val">22%</div></div>
+    <div class="bar-row"><div class="bar-label">Anomalie</div><div class="bar-track"><div class="bar-fill" style="width:18%;background:#5DCAA5"></div></div><div class="bar-val">18%</div></div>
+    <div class="bar-row"><div class="bar-label">Attribut/taille</div><div class="bar-track"><div class="bar-fill" style="width:14%;background:#AFA9EC"></div></div><div class="bar-val">14%</div></div>
+    <div class="bar-row"><div class="bar-label">Organe</div><div class="bar-track"><div class="bar-fill" style="width:11%;background:#AFA9EC"></div></div><div class="bar-val">11%</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Exemples concrets de Q&A</div>
+    <div class="example-box" onclick="sendPrompt('Comment encoder ce type de question fermée oui/non dans un modèle VQA médical ?')">
+      <div class="q-label">Question fermée — présence/absence</div>
+      <div class="q-text">"Is there any abnormality in the chest radiograph?"</div>
+      <div class="a-row"><span class="a-badge a-closed">Réponse : Yes</span><span style="font-size:11px;color:var(--color-text-tertiary)">→ classification binaire</span></div>
+    </div>
+    <div class="example-box" onclick="sendPrompt('Comment encoder ce type de question ouverte de localisation dans un modèle VQA médical ?')">
+      <div class="q-label">Question ouverte — localisation</div>
+      <div class="q-text">"Where is the opacity located in this chest X-ray?"</div>
+      <div class="a-row"><span class="a-badge a-open">Réponse : "right lower lobe"</span><span style="font-size:11px;color:var(--color-text-tertiary)">→ génération texte</span></div>
+    </div>
+    <div class="example-box" onclick="sendPrompt('Comment gérer les questions de comptage dans VQA-RAD ?')">
+      <div class="q-label">Question ouverte — attribut</div>
+      <div class="q-text">"How many lobes does the right lung have?"</div>
+      <div class="a-row"><span class="a-badge a-open">Réponse : "3"</span><span style="font-size:11px;color:var(--color-text-tertiary)">→ nombre ou texte court</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Format du dataset (fichiers)</div>
+    <div class="cards2">
+      <div class="card" onclick="sendPrompt('Comment charger et lire le fichier JSON de VQA-RAD avec Python et pandas ?')">
+        <div class="badge b-teal">Données Q&A</div>
+        <div class="card-title">trainset.json / testset.json</div>
+        <div class="card-body">Chaque entrée : image_name, question, answer, question_type (CLOSED/OPEN), answer_type. Format JSON, facile à charger avec pandas.</div>
+      </div>
+      <div class="card" onclick="sendPrompt('Quel format ont les images de VQA-RAD et comment les prétraiter pour un CNN ?')">
+        <div class="badge b-purple">Images</div>
+        <div class="card-title">Dossier /images</div>
+        <div class="card-body">Images JPEG de tailles variables. Typiquement redimensionnées à 224×224 pour ResNet/ViT. Pas de split val officiel — tu dois le créer toi-même.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="margin-bottom:0">
+    <div class="section-label">Pourquoi choisir VQA-RAD pour la recherche académique</div>
+    <div class="pro-con">
+      <div class="pc-box">
+        <div class="pc-title" style="color:#0F6E56">Avantages</div>
+        <div class="pc-item"><span class="dot-good">+</span> Benchmark standard — tous les papiers publient dessus</div>
+        <div class="pc-item"><span class="dot-good">+</span> Taille gérable sur GPU moyen</div>
+        <div class="pc-item"><span class="dot-good">+</span> Split test officiel pour comparaison directe</div>
+        <div class="pc-item"><span class="dot-good">+</span> Questions annotées par type → ablations faciles</div>
+        <div class="pc-item"><span class="dot-good">+</span> Scores SOTA publiés → facile de se situer</div>
+      </div>
+      <div class="pc-box">
+        <div class="pc-title" style="color:#854F0B">Limites à mentionner dans le papier</div>
+        <div class="pc-item"><span class="dot-warn">!</span> Petit dataset (risque overfitting)</div>
+        <div class="pc-item"><span class="dot-warn">!</span> Pas de split val officiel</div>
+        <div class="pc-item"><span class="dot-warn">!</span> Déséquilibre de classes (beaucoup de "Yes/No")</div>
+        <div class="pc-item"><span class="dot-warn">!</span> Annoté par des non-radiologues</div>
+        <div class="pc-item"><span class="dot-warn">!</span> Biais de distribution question/réponse</div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedVQA N6 — Diagnostic Medical IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container" role="region" aria-live="polite" aria-label="Notifications"></div>
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="theme-toggle" aria-label="Basculer entre mode clair et sombre">
+        <span class="theme-icon-light">☀</span>
+        <span class="theme-icon-dark">☾</span>
+    </button>
+
+    <header class="glass-header">
+        <div class="header-inner">
+            <div class="header-top">
+                <div class="logo-mark" aria-hidden="true">
+                    <div class="logo-hex">
+                        <svg viewBox="0 0 100 100" width="52" height="52">
+                            <defs>
+                                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:var(--accent-1);stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:var(--accent-2);stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 5 L93 30 L93 75 L50 95 L7 75 L7 30 Z" fill="none" stroke="url(#logoGrad)" stroke-width="3"/>
+                            <path d="M50 25 L50 75 M30 40 L70 40 M35 55 L65 55" stroke="url(#logoGrad)" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="logo-pulse"></div>
+                </div>
+                <div class="header-text">
+                    <h1>MedVQA <span class="mono text-dim">N6</span></h1>
+                    <p>Système de Diagnostic Médical par Intelligence Artificielle</p>
+                </div>
+                <div class="header-actions">
+                    <div class="status-pill" role="status" aria-live="polite">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        <span class="status-text">Système actif</span>
+                    </div>
+                    <button class="btn-history" id="historyBtn" aria-label="Afficher l'historique des analyses" title="Historique (H)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span class="history-count" id="historyCount">0</span>
+                    </button>
+                </div>
+            </div>
+            <div class="badge-row" role="list" aria-label="Technologies utilisées">
+                <span class="badge" role="listitem">ViT-G/14</span>
+                <span class="badge" role="listitem">BiomedBERT</span>
+                <span class="badge" role="listitem">Cross-Attention</span>
+                <span class="badge" role="listitem">BAN-8</span>
+                <span class="badge accent" role="listitem">Grad-CAM++</span>
+            </div>
+        </div>
+        <div class="header-glow" aria-hidden="true"></div>
+    </header>
+
+    <div class="container">
+        <main>
+            <div class="grid-two">
+
+                <!-- LEFT COLUMN -->
+                <div class="col-left">
+
+                    <!-- Upload Card -->
+                    <div class="card card-upload">
+                        <div class="card-header">
+                            <span class="card-number">01</span>
+                            <span class="card-label">Image médicale</span>
+                            <span class="card-hint">Formats acceptés</span>
+                        </div>
+
+                        <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Zone de dépôt d'image. Appuyez sur Entrée pour parcourir les fichiers.">
+                            <div class="dz-content">
+                                <div class="dz-icon" aria-hidden="true">
+                                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                        <rect x="6" y="6" width="36" height="36" rx="8" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.6"/>
+                                        <path d="M16 28L22 22L28 28" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M24 16V32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <circle cx="30" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/>
+                                    </svg>
+                                </div>
+                                <p class="dz-title">Déposez votre image ici</p>
+                                <p class="dz-sub">ou</p>
+                                <button class="btn-upload" type="button" onclick="document.getElementById('fileInput').click()">
+                                    <span>Parcourir les fichiers</span>
+                                </button>
+                                <p class="dz-formats">DICOM · PNG · JPG · WEBP · TIFF · NIfTI</p>
+                            </div>
+                            <div class="dz-progress" id="dzProgress" aria-hidden="true">
+                                <div class="dz-progress-bar"></div>
+                            </div>
+                            <input type="file" id="fileInput" accept="image/*,.dcm" hidden aria-label="Sélectionner un fichier médical">
+                        </div>
+
+                        <!-- Preview with overlay capability -->
+                        <div class="preview" id="preview" style="display:none;" role="region" aria-label="Aperçu de l'image chargée">
+                            <div class="preview-header">
+                                <div class="preview-info">
+                                    <span class="mono preview-filename" id="previewFilename">image.jpg</span>
+                                    <span class="preview-dimensions" id="previewDimensions">1024 × 768</span>
+                                </div>
+                                <div class="preview-actions">
+                                    <button class="preview-action" id="removeImageBtn" title="Supprimer l'image" aria-label="Supprimer l'image">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>
+                                    <span class="preview-ok">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Prête
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="preview-image-wrap">
+                                <img id="previewImg" src="" alt="Image médicale chargée">
+                                <div class="preview-overlay" id="previewOverlay" style="display:none;">
+                                    <img id="gradcamOverlayImg" src="" alt="Heatmap Grad-CAM superposée">
+                                </div>
+                                <!-- Grad-CAM opacity slider -->
+                                <div class="gradcam-controls" id="gradcamControls" style="display:none;">
+                                    <label for="opacitySlider" class="slider-label">Fusion Grad-CAM</label>
+                                    <input type="range" id="opacitySlider" min="0" max="100" value="60" aria-label="Opacité de la superposition Grad-CAM">
+                                    <span class="slider-value" id="opacityValue">60%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question Card -->
+                    <div class="card card-question">
+                        <div class="card-header">
+                            <span class="card-number">02</span>
+                            <span class="card-label">Question clinique</span>
+                        </div>
+
+                        <div class="question-wrapper">
+                            <span class="q-icon" aria-hidden="true">?</span>
+                            <input type="text" id="question"
+                                   placeholder="Ex: Is there a pneumothorax?"
+                                   value="Is there a pneumothorax?"
+                                   aria-label="Question clinique"
+                                   autocomplete="off">
+                            <kbd class="kbd-hint">↵</kbd>
+                        </div>
+
+                        <div class="examples-section">
+                            <div class="examples-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                Suggestions rapides
+                            </div>
+                            <div class="examples" role="list">
+                                <button onclick="setQuestion('Is there a fracture?')" role="listitem">Fracture osseuse ?</button>
+                                <button onclick="setQuestion('What abnormality is present?')" role="listitem">Anomalie détectée ?</button>
+                                <button onclick="setQuestion('Is the heart enlarged?')" role="listitem">Cardiomégalie ?</button>
+                                <button onclick="setQuestion('Is there a pneumothorax?')" role="listitem">Pneumothorax ?</button>
+                                <button onclick="setQuestion('Are there pleural effusions?')" role="listitem">Épanchement pleural ?</button>
+                                <button onclick="setQuestion('Is there evidence of pneumonia?')" role="listitem">Pneumonie ?</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Predict Button -->
+                    <button class="predict-btn" id="predictBtn" onclick="predict()" disabled aria-label="Lancer l'analyse (Ctrl+Entrée)">
+                        <span class="btn-bg" aria-hidden="true"></span>
+                        <span class="btn-content">
+                            <span class="btn-icon" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                </svg>
+                            </span>
+                            <span class="btn-text">Lancer l'analyse</span>
+                            <span class="btn-shortcut">Ctrl ↵</span>
+                        </span>
+                    </button>
+
+                </div>
+
+                <!-- RIGHT COLUMN -->
+                <div class="col-right">
+
+                    <!-- Loading State -->
+                    <div class="card loading-card" id="loading" style="display:none;" role="status" aria-live="polite" aria-label="Analyse en cours">
+                        <div class="loading-header">
+                            <div class="loading-title">Analyse en cours</div>
+                            <div class="loading-timer" id="loadingTimer">0.0s</div>
+                        </div>
+
+                        <div class="pipeline-steps" id="pipelineSteps">
+                            <div class="step" data-step="preprocess">
+                                <div class="step-icon">
+                                    <div class="step-spinner"></div>
+                                    <svg class="step-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <div class="step-info">
+                                    <span class="step-name">Prétraitement</span>
+                                    <span class="step-desc">Normalisation · Redimensionnement</span>
+                                </div>
+                            </div>
+                            <div class="step-connector"></div>
+                            <div class="step" data-step="vit">
+                                <div class="step-icon">
+                                    <div class="step-spinner"></div>
+                                    <svg class="step-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <div class="step-info">
+                                    <span class="step-name">ViT Encoder</span>
+                                    <span class="step-desc">Extraction des features visuelles</span>
+                                </div>
+                            </div>
+                            <div class="step-connector"></div>
+                            <div class="step" data-step="bert">
+                                <div class="step-icon">
+                                    <div class="step-spinner"></div>
+                                    <svg class="step-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <div class="step-info">
+                                    <span class="step-name">BiomedBERT</span>
+                                    <span class="step-desc">Encodage sémantique de la question</span>
+                                </div>
+                            </div>
+                            <div class="step-connector"></div>
+                            <div class="step" data-step="fusion">
+                                <div class="step-icon">
+                                    <div class="step-spinner"></div>
+                                    <svg class="step-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <div class="step-info">
+                                    <span class="step-name">Cross-Attention</span>
+                                    <span class="step-desc">Fusion multimodale · Classification</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="loading-progress">
+                            <div class="loading-progress-bar" id="loadingProgressBar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="results" style="display:none;" role="region" aria-label="Résultats de l'analyse">
+
+                        <!-- Answer Card -->
+                        <div class="card answer-card">
+                            <div class="card-header">
+                                <span class="card-number">03</span>
+                                <span class="card-label">Diagnostic</span>
+                                <span class="answer-badge" id="answerBadge">Binaire</span>
+                            </div>
+
+                            <div class="answer-main">
+                                <div class="answer-text" id="answerText">—</div>
+                                <div class="answer-confidence-ring" id="confidenceRing" aria-hidden="true">
+                                    <svg viewBox="0 0 100 100">
+                                        <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                                        <circle class="ring-fill" id="confidenceRingFill" cx="50" cy="50" r="42"/>
+                                    </svg>
+                                    <span class="ring-value" id="ringValue">0%</span>
+                                </div>
+                            </div>
+
+                            <div class="answer-bar-wrap">
+                                <div class="answer-bar">
+                                    <div class="answer-bar-fill" id="answerBarFill"></div>
+                                </div>
+                                <div class="answer-bar-labels">
+                                    <span>Incertain</span>
+                                    <span id="confidenceText">Confiance : 0%</span>
+                                    <span>Certain</span>
+                                </div>
+                            </div>
+
+                            <div class="answer-meta-grid">
+                                <div class="meta-item">
+                                    <span class="meta-label">Type de réponse</span>
+                                    <span class="meta-value" id="metaType">—</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Temps de traitement</span>
+                                    <span class="meta-value" id="metaTime">—</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Modèle</span>
+                                    <span class="meta-value">ViT + BERT-BAN</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Date d'analyse</span>
+                                    <span class="meta-value" id="metaDate">—</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Explainability Card -->
+                        <div class="card gradcam-card">
+                            <div class="card-header">
+                                <span class="card-number">04</span>
+                                <span class="card-label">Explainability</span>
+                                <span class="card-hint">Grad-CAM++</span>
+                            </div>
+
+                            <p class="gradcam-desc">
+                                Zones d'activation ayant influencé la décision du modèle. 
+                                <span class="text-dim">Rouge = forte influence · Bleu = faible influence</span>
+                            </p>
+
+                            <div class="gradcam-tabs" role="tablist">
+                                <button class="gradcam-tab active" role="tab" aria-selected="true" id="tabOverlay" onclick="switchGradcamView('overlay')">
+                                    Superposition
+                                </button>
+                                <button class="gradcam-tab" role="tab" aria-selected="false" id="tabIsolated" onclick="switchGradcamView('isolated')">
+                                    Isolé
+                                </button>
+                            </div>
+
+                            <div class="gradcam-wrap" role="tabpanel" id="gradcamPanel">
+                                <img id="gradcamImg" src="" alt="Carte de chaleur Grad-CAM montrant les zones d'intérêt du modèle">
+                                <div class="gradcam-legend">
+                                    <span>Faible</span>
+                                    <div class="legend-bar"></div>
+                                    <span>Élevé</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Export Card -->
+                        <div class="card export-card" id="exportCard">
+                            <div class="card-header">
+                                <span class="card-number">05</span>
+                                <span class="card-label">Exporter les résultats</span>
+                                <span class="card-hint">3 formats</span>
+                            </div>
+                            <p class="export-desc">Téléchargez les résultats de l'analyse dans le format souhaité.</p>
+                            <div class="export-actions">
+
+                                <button class="export-btn export-btn--json" onclick="downloadJSON()" title="Exporter en JSON">
+                                    <span class="export-btn-icon" aria-hidden="true">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                                        </svg>
+                                    </span>
+                                    <span class="export-btn-body">
+                                        <span class="export-btn-title">JSON</span>
+                                        <span class="export-btn-sub">Données structurées</span>
+                                    </span>
+                                    <span class="export-btn-arrow" aria-hidden="true">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    </span>
+                                </button>
+
+                                <button class="export-btn export-btn--cam" onclick="downloadGradCAM()" title="Télécharger le Grad-CAM">
+                                    <span class="export-btn-icon" aria-hidden="true">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                        </svg>
+                                    </span>
+                                    <span class="export-btn-body">
+                                        <span class="export-btn-title">Grad-CAM</span>
+                                        <span class="export-btn-sub">Image d'activation</span>
+                                    </span>
+                                    <span class="export-btn-arrow" aria-hidden="true">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    </span>
+                                </button>
+
+                                <button class="export-btn export-btn--report" onclick="downloadReport()" title="Télécharger le rapport PDF">
+                                    <span class="export-btn-icon" aria-hidden="true">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                                        </svg>
+                                    </span>
+                                    <span class="export-btn-body">
+                                        <span class="export-btn-title">Rapport PDF</span>
+                                        <span class="export-btn-sub">Document A4 complet</span>
+                                    </span>
+                                    <span class="export-btn-arrow" aria-hidden="true">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    </span>
+                                </button>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Placeholder -->
+                    <div class="card placeholder-card" id="placeholder">
+                        <div class="placeholder-inner">
+                            <div class="ph-visual" aria-hidden="true">
+                                <div class="ph-ring"></div>
+                                <div class="ph-ring ph-ring-2"></div>
+                                <div class="ph-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <path d="M21 15l-5-5L5 21"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="ph-title">Les résultats s'afficheront ici</p>
+                            <p class="ph-sub">Chargez une image médicale et posez une question clinique pour obtenir un diagnostic assisté par IA.</p>
+                            <div class="ph-features">
+                                <span class="ph-feature">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    Analyse en ~2–5s
+                                </span>
+                                <span class="ph-feature">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Visualisation Grad-CAM
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <!-- History Sidebar -->
+        <aside class="history-panel" id="historyPanel" role="complementary" aria-label="Historique des analyses">
+            <div class="history-header">
+                <h3>Historique des analyses</h3>
+                <button class="history-close" id="historyClose" aria-label="Fermer l'historique">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="history-empty">Aucune analyse effectuée</div>
+            </div>
+            <div class="history-footer">
+                <button class="btn-clear-history" id="clearHistoryBtn">Effacer l'historique</button>
+            </div>
+        </aside>
+        <div class="history-overlay" id="historyOverlay"></div>
+
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span class="footer-logo">MedVQA N6</span>
+                    <span class="footer-sep">·</span>
+                    <span>ENSAH 2025–2026 · Projet Deep Learning</span>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/votre-repo" target="_blank" rel="noopener">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <a href="/docs" target="_blank" rel="noopener">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        API Docs
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

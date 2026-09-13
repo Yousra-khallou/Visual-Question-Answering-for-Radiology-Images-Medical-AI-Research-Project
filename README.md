@@ -1,164 +1,181 @@
-# RadVQA
+﻿# 🔬 MedVQA N6 — Medical Visual Question Answering & Explainability
 
-**Visual Question Answering for Radiology Images — Medical AI Research Project**
+**Système d'Intelligence Artificielle pour le Diagnostic et l'Analyse Visuelle de Radiologies Médicales.**
 
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Python](https://img.shields.io/badge/python-3.10+-green)
-![Status](https://img.shields.io/badge/status-work%20in%20progress-orange)
-![Domain](https://img.shields.io/badge/domain-Radiology%20·%20NLP%20·%20CV-purple)
-
----
-
-## Overview
-
-**RadVQA** is a research project exploring **Medical Visual Question Answering (Med-VQA)** applied to radiology images. Given a radiology image (X-ray, CT, MRI) and a clinical question in natural language, the model produces an accurate and interpretable answer.
-
-This repository provides a modular pipeline covering data preprocessing, visual and text encoding, multimodal fusion, and answer generation — evaluated on standard benchmarks (VQA-RAD, SLAKE).
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
+[![Transformers](https://img.shields.io/badge/Transformers-HuggingFace-yellow.svg)](https://huggingface.co/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ed.svg)](https://www.docker.com/)
 
 ---
 
-## Features
+## 📌 Présentation
 
-- **Multimodal architecture** — visual encoder (ViT / ResNet) + text encoder (BioBERT)
-- **Closed & open-ended answering** — classification and free-text generation modes
-- **Benchmark-ready** — evaluation scripts for VQA-RAD and SLAKE out of the box
-- **Modular design** — swap encoders, fusion strategies, and datasets with minimal config changes
-- **Experiment tracking** — integrated with Weights & Biases
+**MedVQA N6** est un système multimodal d'aide au diagnostic médical combinant vision par ordinateur et traitement du langage naturel clinique. À partir d'un cliché d'imagerie médicale (Radiographie X, Scanner CT, IRM) et d'une question clinique formulée en langage naturel, le modèle :
+1. **Prédit la réponse diagnostique** (questions binaires/fermées ou questions cliniques ouvertes).
+2. **Estime la certitude diagnostique** via un score de confiance calibré.
+3. **Fournit une explication visuelle interprétable** grâce à des cartes de chaleur **Grad-CAM** superposées à l'image d'origine.
 
 ---
 
-## Project Structure
+## 🧠 Architecture Multimodale
 
 ```
-radvqa/
-├── data/
-│   ├── vqa_rad/          # VQA-RAD dataset (download separately)
-│   ├── slake/            # SLAKE dataset (download separately)
-│   └── preprocessing/    # tokenizers, image transforms
-├── models/
-│   ├── visual_encoder.py # ViT / ResNet visual backbone
-│   ├── text_encoder.py   # BioBERT / ClinicalBERT
-│   └── fusion.py         # Cross-attention multimodal fusion
-├── train.py              # Training loop
-├── evaluate.py           # Evaluation on benchmarks
-├── config/
-│   └── default.yaml      # Hyperparameters & dataset paths
+                          ┌────────────────────────┐
+                          │   Radiologie Médicale  │
+                          │     (X-Ray/CT/MRI)     │
+                          └───────────┬────────────┘
+                                      │
+                                      ▼
+                          ┌────────────────────────┐
+                          │     Vision Encoder     │
+                          │   ViT-Base/16 (224)    │
+                          └───────────┬────────────┘
+                                      │ (768-dim)
+                                      ▼
+                          ┌────────────────────────┐
+                          │  Visual Projection FC  │
+                          └───────────┬────────────┘
+                                      │ (512-dim)
+                                      │
+┌────────────────────────┐            │
+│    Question Clinique   │            │
+│   (Langage Naturel)    │            │
+└───────────┬────────────┘            │
+            │                         │
+            ▼                         │
+┌────────────────────────┐            │
+│      Text Encoder      │            │
+│       BiomedBERT       │            │
+└───────────┬────────────┘            │
+            │ (768-dim)               │
+            ▼                         │
+┌────────────────────────┐            │
+│   Text Projection FC   │            │
+└───────────┬────────────┘            │
+            │ (512-dim)               │
+            └───────────┬─────────────┘
+                        ▼
+            ┌────────────────────────┐
+            │   Fusion Multimodale   │
+            │  Concat + BN + Dropout │
+            └───────────┬────────────┘
+                        │
+            ┌───────────┴────────────┐
+            ▼                        ▼
+┌────────────────────────┐ ┌────────────────────────┐
+│  Head Closed (Linear)  │ │   Head Open (Linear)   │
+│  Oui/Non/Normal/Bilateral│ │  Diagnostics & Organes │
+└────────────────────────┘ └────────────────────────┘
+```
+
+- **Backbone Visuel** : `Vision Transformer (ViT-Base/16, patch 224)`
+- **Backbone Textuel** : `BiomedBERT` (`microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract`)
+- **Mécanisme de Fusion** : Projections denses 512-d, concaténation, BatchNorm et régularisation Dropout.
+- **Interprétabilité** : Hook Grad-CAM sur la couche de normalisation du ViT avec projection sur l'image source.
+
+---
+
+## 🗂️ Structure du Projet
+
+```
+.
+├── src/                               # Modules Python réutilisables
+│   ├── models/
+│   │   └── medvqa.py                  # Architecture du modèle MedVQA_N6
+│   ├── interpretability/
+│   │   └── gradcam.py                 # Algorithme Grad-CAM pour ViT
+│   ├── utils/
+│   │   ├── colormap.py                # Colormap Jet optimisée
+│   │   └── download_weights.py        # Téléchargement automatique des poids
+│   └── pipeline.py                    # Pipeline unifié inférence & explicabilité
+├── model/
+│   ├── vocab_closed.json              # Dictionnaire des réponses fermées
+│   └── vocab_open.json                # Dictionnaire des réponses ouvertes
 ├── notebooks/
-│   └── exploration.ipynb # EDA & visualization
-├── requirements.txt
+│   └── modelfinal.ipynb               # Notebook d'entraînement & validation
+├── templates/
+│   └── index.html                     # Interface Web Médicale (HTML5)
+├── static/
+│   ├── style.css                      # Thème UI / Dark Mode / Glassmorphism
+│   └── app.js                         # Logique interactive, export PDF, historique
+├── app.py                             # Serveur Web Flask (Production & Local)
+├── gradio_app.py                      # Démo Gradio (Hugging Face Spaces)
+├── Dockerfile                         # Déploiement conteneurisé
+├── requirements.txt                   # Dépendances Python
 └── README.md
 ```
 
 ---
 
-## Getting Started
+## 🚀 Démarrage Rapide
 
-### Installation
+### 1. Cloner le Répertoire & Installer les Dépendances
 
 ```bash
-git clone https://github.com/your-username/radvqa.git
-cd radvqa
+git clone https://github.com/Yousra-khallou/Visual-Question-Answering-for-Radiology-Images-Medical-AI-Research-Project.git
+cd Visual-Question-Answering-for-Radiology-Images-Medical-AI-Research-Project
+
+python -m venv venv
+# Windows :
+venv\Scripts\activate
+# Linux/macOS :
+source venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-### Download Datasets
+### 2. Télécharger les Poids du Modèle (`best_n6.pth`)
 
-- **VQA-RAD** — [osf.io/89kps](https://osf.io/89kps) → place in `data/vqa_rad/`
-- **SLAKE** — [github.com/med-vl/SLAKE](https://github.com/med-vl/SLAKE) → place in `data/slake/`
-
-### Train
+Placez le fichier `best_n6.pth` dans le dossier `model/`, ou téléchargez-le automatiquement :
 
 ```bash
-python train.py --config config/default.yaml --dataset vqa_rad
+# Via Google Drive :
+python -m src.utils.download_weights --gdrive-id <VOTRE_GDRIVE_FILE_ID>
+
+# Via Hugging Face Hub :
+python -m src.utils.download_weights --hf-repo <USERNAME/REPO_NAME>
 ```
 
-### Evaluate
+### 3. Lancer l'Application Web Flask
 
 ```bash
-python evaluate.py --checkpoint checkpoints/best_model.pt --dataset slake
+python app.py
+```
+👉 Accédez à l'interface dans votre navigateur : **`http://localhost:5000`**
+
+### 4. Lancer l'Interface Gradio
+
+```bash
+python gradio_app.py
+```
+👉 Accédez à l'interface Gradio : **`http://localhost:7860`**
+
+---
+
+## 🐳 Déploiement Docker
+
+Pour exécuter le conteneur en production avec Gunicorn :
+
+```bash
+# Construction de l'image
+docker build -t medvqa-n6 .
+
+# Lancement du conteneur
+docker run -d -p 5000:5000 --name medvqa-app medvqa-n6
 ```
 
 ---
 
-## Datasets Used
+## 📊 Datasets & Entraînement
 
-| Dataset | Type | Size | Access |
-|---|---|---|---|
-| VQA-RAD | VQA (clinical Q&A) | 3 515 pairs | [osf.io/89kps](https://osf.io/89kps) |
-| SLAKE | VQA bilingual EN/ZH | 14 000 pairs | [GitHub](https://github.com/med-vl/SLAKE) |
-| NIH ChestX-ray14 | Classification (pre-training) | 112 000+ images | [Kaggle](https://www.kaggle.com/datasets/nih-chest-xrays/data) |
-| MIMIC-CXR | Report generation | 227 835 studies | [PhysioNet](https://physionet.org/content/mimic-cxr) |
+Le modèle est entraîné et évalué sur les benchmarks cliniques de référence :
+- **VQA-RAD** : 3 515 paires image-question validées par des cliniciens.
+- **SLAKE** : Dataset bilingue annoté sémantiquement pour la radiologie.
 
 ---
 
-## Architecture Overview
+## 📜 Licence & Droits d'Auteur
 
-```
-┌─────────────────┐     ┌──────────────────┐
-│  Radiology Image│     │  Clinical Question│
-│  (X-ray/CT/MRI) │     │  (natural language│
-└────────┬────────┘     └────────┬─────────┘
-         │                       │
-         ▼                       ▼
-  ┌─────────────┐        ┌─────────────┐
-  │Visual Encoder│       │ Text Encoder │
-  │ViT / ResNet │        │  BioBERT    │
-  └──────┬──────┘        └──────┬──────┘
-         │                      │
-         └──────────┬───────────┘
-                    ▼
-          ┌──────────────────┐
-          │  Fusion Module   │
-          │ Cross-Attention  │
-          └────────┬─────────┘
-                   ▼
-         ┌─────────────────┐
-         │  Answer Module  │
-         │  Classif / Gen  │
-         └────────┬────────┘
-                  ▼
-         ┌─────────────────┐
-         │    Answer       │
-         │  Yes/No/Label   │
-         │  or free text   │
-         └─────────────────┘
-```
-
----
-
-## Roadmap
-
-- [ ] Baseline model (BioBERT + ResNet + concat fusion)
-- [ ] Cross-attention fusion module
-- [ ] Evaluation on VQA-RAD and SLAKE
-- [ ] Grad-CAM visual explanations
-- [ ] Fine-tuning LLaVA-Med adapter
-- [ ] Demo Gradio interface
-
----
-
-## References
-
-- Lau et al. (2018) — [VQA-RAD](https://osf.io/89kps)
-- Liu et al. (2021) — [SLAKE](https://arxiv.org/abs/2107.04803)
-- Johnson et al. (2019) — [MIMIC-CXR](https://physionet.org/content/mimic-cxr)
-- Wang et al. (2017) — [ChestX-ray14](https://arxiv.org/abs/1705.02315)
-
----
-
-## Citation
-
-```bibtex
-@misc{radvqa2025,
-  title  = {RadVQA: Visual Question Answering for Radiology Images},
-  author = {Your Name},
-  year   = {2025},
-  url    = {https://github.com/your-username/radvqa}
-}
-```
-
----
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
+Ce projet est distribué sous licence MIT. Consultez le fichier `LICENSE` pour plus de détails.

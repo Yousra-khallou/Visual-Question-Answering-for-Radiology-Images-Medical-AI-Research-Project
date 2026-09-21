@@ -189,6 +189,18 @@ Le modèle est entraîné et évalué sur les benchmarks cliniques de référenc
 
 ---
 
+
+---
+
+## 👥 Auteurs & Collaboration
+
+Ce projet de recherche a été développé en collaboration par :
+- **Yousra Khallou** — [@Yousra-khallou](https://github.com/Yousra-khallou)
+- **Ilham Elmattichi** — [@ilhameelma](https://github.com/ilhameelma)
+
+---
+
 ## 📜 Licence & Droits d'Auteur
 
-Ce projet est distribué sous licence MIT. Consultez le fichier `LICENSE` pour plus de détails.
+Ce projet est distribué sous licence MIT. Consultez le fichier [LICENSE](LICENSE) pour plus de détails.  
+Copyright (c) 2026 Yousra Khallou & Ilham Elmattichi.

@@ -93,23 +93,27 @@
 ├── model/
 │   ├── vocab_closed.json              # Dictionnaire des réponses fermées
 │   └── vocab_open.json                # Dictionnaire des réponses ouvertes
-├── notebooks/
-│   └── modelfinal.ipynb               # Notebook d'entraînement & validation
+├── notebooks/                         # Démarche expérimentale complète (N1 -> N6)
+│   ├── Baseline1_and_2.ipynb          # Baselines N1 (Majority/BERT) & N2 (CNN+LSTM)
+│   ├── MedVQA_Baseline_N3_BAN8.ipynb  # Baseline N3 (Bilinear Attention Network)
+│   ├── baseline4.ipynb                # Baseline N4 (ViLBERT / Co-attention)
+│   ├── MedVQA_Baseline_N5.ipynb       # Baseline N5 (ViT + BiomedBERT minimal)
+│   └── MedVQA_N6_Final.ipynb          # ⭐ Modèle FINAL N6 (Entraînement & Export)
 ├── templates/
 │   └── index.html                     # Interface Web Médicale (HTML5)
 ├── static/
 │   ├── style.css                      # Thème UI / Dark Mode / Glassmorphism
 │   └── app.js                         # Logique interactive, export PDF, historique
-├── app.py                             # Serveur Web Flask (Production & Local)
-├── gradio_app.py                      # Démo Gradio (Hugging Face Spaces)
-├── Dockerfile                         # Déploiement conteneurisé
+├── app.py                             # Serveur Web Flask & API REST
+├── gradio_app.py                      # Démo Gradio (Prêt pour Hugging Face Spaces)
+├── Dockerfile                         # Recette de conteneurisation Docker
 ├── requirements.txt                   # Dépendances Python
 └── README.md
 ```
 
 ---
 
-## 🚀 Démarrage Rapide
+## 🚀 Démarrage Rapide (Local)
 
 ### 1. Cloner le Répertoire & Installer les Dépendances
 
@@ -126,9 +130,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Télécharger les Poids du Modèle (`best_n6.pth`)
+### 2. Télécharger ou Placer les Poids du Modèle (`best_n6.pth`)
 
-Placez le fichier `best_n6.pth` dans le dossier `model/`, ou téléchargez-le automatiquement :
+Placez le fichier `best_n6.pth` (issu de l'entraînement dans [`notebooks/MedVQA_N6_Final.ipynb`](notebooks/MedVQA_N6_Final.ipynb)) dans le dossier `model/`, ou téléchargez-le automatiquement :
 
 ```bash
 # Via Google Drive :
@@ -154,17 +158,26 @@ python gradio_app.py
 
 ---
 
-## 🐳 Déploiement Docker
+## 🐳 Conteneurisation Docker & Prêt pour le Cloud
 
-Pour exécuter le conteneur en production avec Gunicorn :
+Le projet inclut un fichier `Dockerfile` configuré avec le serveur de production WSGI **Gunicorn**. Il permet deux usages :
+
+### 1. Exécution Locale Isolée (dans un conteneur sur votre machine)
+Permet d'exécuter l'application dans un environnement hermétique sans installer Python ou PyTorch directement sur votre système :
 
 ```bash
-# Construction de l'image
+# Construction de l'image Docker
 docker build -t medvqa-n6 .
 
-# Lancement du conteneur
+# Lancement du conteneur en local
 docker run -d -p 5000:5000 --name medvqa-app medvqa-n6
 ```
+👉 L'application tourne alors sur **`http://localhost:5000`**.
+
+### 2. Déploiement Public sur le Cloud (Optionnel)
+Ce même conteneur Docker ou le fichier `gradio_app.py` peut être déployé en 1 clic sur les plateformes Cloud pour donner une URL publique accessible à tous :
+- **Hugging Face Spaces** : Via `gradio_app.py` (Gratuit, 16 Go RAM).
+- **Render / Railway / AWS / GCP** : En connectant simplement ce dépôt GitHub et son `Dockerfile`.
 
 ---
 

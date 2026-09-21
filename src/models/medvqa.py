@@ -7,11 +7,11 @@ DEFAULT_BIOMEDBERT = "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
 
 class MedVQA_N6(nn.Module):
     """
-    Architecture Multimodale MedVQA N6:
-    - Encodeur Visuel : Vision Transformer (ViT-Base/16-224)
-    - Encodeur Texte  : BiomedBERT (BiomedNLP-BiomedBERT-base-uncased-abstract)
-    - Fusion          : Projection Linéaire + Concaténation + BatchNorm + Dropout
-    - Têtes de sortie : Double tête fermée (closed) et ouverte (open)
+    MedVQA N6 Multimodal Neural Architecture:
+    - Visual Encoder : Vision Transformer (ViT-Base/16-224)
+    - Text Encoder   : BiomedBERT (BiomedNLP-BiomedBERT-base-uncased-abstract)
+    - Multimodal Fusion: Linear Projections + Concatenation + BatchNorm + Dropout
+    - Dual Prediction Heads: Closed (binary/yes-no) and Open (clinical entities)
     """
     def __init__(
         self,

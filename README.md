@@ -1,6 +1,6 @@
-﻿# 🔬 MedVQA N6 — Medical Visual Question Answering & Explainability
+﻿# 🔬 MedVQA N6 — Medical Visual Question Answering & Visual Explainability
 
-**Système d'Intelligence Artificielle pour le Diagnostic et l'Analyse Visuelle de Radiologies Médicales.**
+**Deep Learning Multimodal System for Automated Clinical Question Answering and Visual Attention Mapping on Radiology Images (X-Ray, CT, MRI).**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
@@ -10,20 +10,20 @@
 
 ---
 
-## 📌 Présentation
+## 📌 Overview
 
-**MedVQA N6** est un système multimodal d'aide au diagnostic médical combinant vision par ordinateur et traitement du langage naturel clinique. À partir d'un cliché d'imagerie médicale (Radiographie X, Scanner CT, IRM) et d'une question clinique formulée en langage naturel, le modèle :
-1. **Prédit la réponse diagnostique** (questions binaires/fermées ou questions cliniques ouvertes).
-2. **Estime la certitude diagnostique** via un score de confiance calibré.
-3. **Fournit une explication visuelle interprétable** grâce à des cartes de chaleur **Grad-CAM** superposées à l'image d'origine.
+**MedVQA N6** is an end-to-end multimodal medical artificial intelligence framework designed to assist radiologists and clinicians in diagnostic decision-making. Given an input radiological image (X-ray, CT scan, or MRI) along with a free-form clinical question in natural language, the system:
+1. **Predicts accurate clinical answers** across both closed (binary/yes-no/abnormality) and open-ended (organ/diagnosis/modality) queries.
+2. **Estimates calibrated diagnostic confidence scores**.
+3. **Generates visual explainability heatmaps** using **Grad-CAM** attention maps overlaid directly onto the source radiological scans.
 
 ---
 
-## 🧠 Architecture Multimodale
+## 🧠 System Architecture
 
 ```
                           ┌────────────────────────┐
-                          │   Radiologie Médicale  │
+                          │    Radiology Image     │
                           │     (X-Ray/CT/MRI)     │
                           └───────────┬────────────┘
                                       │
@@ -40,8 +40,8 @@
                                       │ (512-dim)
                                       │
 ┌────────────────────────┐            │
-│    Question Clinique   │            │
-│   (Langage Naturel)    │            │
+│   Clinical Question    │            │
+│   (Natural Language)   │            │
 └───────────┬────────────┘            │
             │                         │
             ▼                         │
@@ -58,7 +58,7 @@
             └───────────┬─────────────┘
                         ▼
             ┌────────────────────────┐
-            │   Fusion Multimodale   │
+            │   Multimodal Fusion    │
             │  Concat + BN + Dropout │
             └───────────┬────────────┘
                         │
@@ -66,141 +66,141 @@
             ▼                        ▼
 ┌────────────────────────┐ ┌────────────────────────┐
 │  Head Closed (Linear)  │ │   Head Open (Linear)   │
-│  Oui/Non/Normal/Bilateral│ │  Diagnostics & Organes │
+│  Yes/No/Normal/Bilateral│ │  Organs & Diagnoses    │
 └────────────────────────┘ └────────────────────────┘
 ```
 
-- **Backbone Visuel** : `Vision Transformer (ViT-Base/16, patch 224)`
-- **Backbone Textuel** : `BiomedBERT` (`microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract`)
-- **Mécanisme de Fusion** : Projections denses 512-d, concaténation, BatchNorm et régularisation Dropout.
-- **Interprétabilité** : Hook Grad-CAM sur la couche de normalisation du ViT avec projection sur l'image source.
+- **Visual Backbone**: `Vision Transformer (ViT-Base/16, 224x224 input)`
+- **Textual Backbone**: `BiomedBERT` (`microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract`)
+- **Multimodal Fusion**: Dedicated 512-d linear projections, feature concatenation, `BatchNorm1d`, and `Dropout(0.3)` regularization.
+- **Visual Explainability**: Grad-CAM attention hook on the final normalization layer of the Vision Transformer with vectorized Jet colormap projection.
 
 ---
 
-## 🗂️ Structure du Projet
+## 🗂️ Repository Structure
 
 ```
 .
-├── src/                               # Modules Python réutilisables
+├── src/                               # Modular Python Source Package
 │   ├── models/
-│   │   └── medvqa.py                  # Architecture du modèle MedVQA_N6
+│   │   └── medvqa.py                  # MedVQA_N6 Dual-Head Architecture
 │   ├── interpretability/
-│   │   └── gradcam.py                 # Algorithme Grad-CAM pour ViT
+│   │   └── gradcam.py                 # Vision Transformer Grad-CAM Module
 │   ├── utils/
-│   │   ├── colormap.py                # Colormap Jet optimisée
-│   │   └── download_weights.py        # Téléchargement automatique des poids
-│   └── pipeline.py                    # Pipeline unifié inférence & explicabilité
+│   │   ├── colormap.py                # Vectorized Jet Colormap Generator
+│   │   └── download_weights.py        # Automated Weights Download Utility
+│   └── pipeline.py                    # Unified Inference & Explainability Pipeline
 ├── model/
-│   ├── vocab_closed.json              # Dictionnaire des réponses fermées
-│   └── vocab_open.json                # Dictionnaire des réponses ouvertes
-├── notebooks/                         # Démarche expérimentale complète (N1 -> N6)
+│   ├── vocab_closed.json              # Closed-ended Answers Vocabulary
+│   └── vocab_open.json                # Open-ended Answers Vocabulary
+├── notebooks/                         # Complete Research Benchmarking (N1 -> N6)
 │   ├── Baseline1_and_2.ipynb          # Baselines N1 (Majority/BERT) & N2 (CNN+LSTM)
 │   ├── MedVQA_Baseline_N3_BAN8.ipynb  # Baseline N3 (Bilinear Attention Network)
 │   ├── baseline4.ipynb                # Baseline N4 (ViLBERT / Co-attention)
-│   ├── MedVQA_Baseline_N5.ipynb       # Baseline N5 (ViT + BiomedBERT minimal)
-│   └── MedVQA_N6_Final.ipynb          # ⭐ Modèle FINAL N6 (Entraînement & Export)
+│   ├── MedVQA_Baseline_N5.ipynb       # Baseline N5 (ViT + BiomedBERT baseline)
+│   └── MedVQA_N6_Final.ipynb          # ⭐ Official Final N6 Model (Training & Export)
 ├── templates/
-│   └── index.html                     # Interface Web Médicale (HTML5)
+│   └── index.html                     # Clinical Diagnostic Web UI (HTML5)
 ├── static/
-│   ├── style.css                      # Thème UI / Dark Mode / Glassmorphism
-│   └── app.js                         # Logique interactive, export PDF, historique
-├── app.py                             # Serveur Web Flask & API REST
-├── gradio_app.py                      # Démo Gradio (Prêt pour Hugging Face Spaces)
-├── Dockerfile                         # Recette de conteneurisation Docker
-├── requirements.txt                   # Dépendances Python
+│   ├── style.css                      # UI Theme / Glassmorphism / Dark Mode
+│   └── app.js                         # Interactive Logic, Grad-CAM slider, PDF Export
+├── app.py                             # Flask Production Web Server & REST API
+├── gradio_app.py                      # Gradio Web Demo (Hugging Face Spaces)
+├── Dockerfile                         # Containerization Recipe
+├── requirements.txt                   # Python Dependencies
+├── LICENSE                            # MIT License
 └── README.md
 ```
 
 ---
 
-## 🚀 Démarrage Rapide (Local)
+## 🚀 Quickstart Guide (Local Setup)
 
-### 1. Cloner le Répertoire & Installer les Dépendances
+### 1. Clone Repository & Install Dependencies
 
 ```bash
 git clone https://github.com/Yousra-khallou/Visual-Question-Answering-for-Radiology-Images-Medical-AI-Research-Project.git
 cd Visual-Question-Answering-for-Radiology-Images-Medical-AI-Research-Project
 
+# Create and activate virtual environment
 python -m venv venv
-# Windows :
-venv\Scripts\activate
-# Linux/macOS :
+# Windows:
+.\venv\Scripts\Activate
+# Linux / macOS:
 source venv/bin/activate
 
+# Install required packages
 pip install -r requirements.txt
 ```
 
-### 2. Télécharger ou Placer les Poids du Modèle (`best_n6.pth`)
+### 2. Download Model Weights (`best_n6.pth`)
 
-Placez le fichier `best_n6.pth` (issu de l'entraînement dans [`notebooks/MedVQA_N6_Final.ipynb`](notebooks/MedVQA_N6_Final.ipynb)) dans le dossier `model/`, ou téléchargez-le automatiquement :
+Place your trained `best_n6.pth` checkpoint (from [`notebooks/MedVQA_N6_Final.ipynb`](notebooks/MedVQA_N6_Final.ipynb)) inside the `model/` folder, or download it automatically:
 
 ```bash
-# Via Google Drive :
-python -m src.utils.download_weights --gdrive-id <VOTRE_GDRIVE_FILE_ID>
+# Via Google Drive:
+python -m src.utils.download_weights --gdrive-id <YOUR_GDRIVE_FILE_ID>
 
-# Via Hugging Face Hub :
+# Via Hugging Face Hub:
 python -m src.utils.download_weights --hf-repo <USERNAME/REPO_NAME>
 ```
 
-### 3. Lancer l'Application Web Flask
+### 3. Launch Flask Web Application
 
 ```bash
 python app.py
 ```
-👉 Accédez à l'interface dans votre navigateur : **`http://localhost:5000`**
+👉 Open your browser at: **`http://localhost:5000`**
 
-### 4. Lancer l'Interface Gradio
+### 4. Launch Gradio Demo Interface
 
 ```bash
 python gradio_app.py
 ```
-👉 Accédez à l'interface Gradio : **`http://localhost:7860`**
+👉 Open your browser at: **`http://localhost:7860`**
 
 ---
 
-## 🐳 Conteneurisation Docker & Prêt pour le Cloud
+## 🐳 Docker Containerization & Cloud Deployment
 
-Le projet inclut un fichier `Dockerfile` configuré avec le serveur de production WSGI **Gunicorn**. Il permet deux usages :
+This project includes a production-ready `Dockerfile` powered by **Gunicorn** WSGI:
 
-### 1. Exécution Locale Isolée (dans un conteneur sur votre machine)
-Permet d'exécuter l'application dans un environnement hermétique sans installer Python ou PyTorch directement sur votre système :
+### 1. Local Containerized Execution
+Run the entire application in an isolated environment without local PyTorch configuration:
 
 ```bash
-# Construction de l'image Docker
+# Build Docker image
 docker build -t medvqa-n6 .
 
-# Lancement du conteneur en local
+# Run container locally
 docker run -d -p 5000:5000 --name medvqa-app medvqa-n6
 ```
-👉 L'application tourne alors sur **`http://localhost:5000`**.
+👉 The application will be accessible at **`http://localhost:5000`**.
 
-### 2. Déploiement Public sur le Cloud (Optionnel)
-Ce même conteneur Docker ou le fichier `gradio_app.py` peut être déployé en 1 clic sur les plateformes Cloud pour donner une URL publique accessible à tous :
-- **Hugging Face Spaces** : Via `gradio_app.py` (Gratuit, 16 Go RAM).
-- **Render / Railway / AWS / GCP** : En connectant simplement ce dépôt GitHub et son `Dockerfile`.
-
----
-
-## 📊 Datasets & Entraînement
-
-Le modèle est entraîné et évalué sur les benchmarks cliniques de référence :
-- **VQA-RAD** : 3 515 paires image-question validées par des cliniciens.
-- **SLAKE** : Dataset bilingue annoté sémantiquement pour la radiologie.
+### 2. Public Cloud Deployment (Optional)
+This repository is pre-configured for one-click deployment:
+- **Hugging Face Spaces**: Instant deployment via `gradio_app.py` (Free 16 GB RAM CPU tier).
+- **Render / Railway / AWS / GCP**: Deploy the containerized Flask app via `Dockerfile`.
 
 ---
 
+## 📊 Datasets & Research Benchmarks
+
+The models are trained and evaluated on gold-standard clinical radiology benchmarks:
+- **VQA-RAD**: 3,515 clinician-validated image-question pairs across various radiology modalities.
+- **SLAKE**: Semantically annotated bilingual medical Visual Question Answering benchmark.
 
 ---
 
-## 👥 Auteurs & Collaboration
+## 👥 Authors & Collaboration
 
-Ce projet de recherche a été développé en collaboration par :
+This research project was developed in collaborative partnership by:
 - **Yousra Khallou** — [@Yousra-khallou](https://github.com/Yousra-khallou)
 - **Ilham Elmattichi** — [@ilhameelma](https://github.com/ilhameelma)
 
 ---
 
-## 📜 Licence & Droits d'Auteur
+## 📜 License
 
-Ce projet est distribué sous licence MIT. Consultez le fichier [LICENSE](LICENSE) pour plus de détails.  
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.  
 Copyright (c) 2026 Yousra Khallou & Ilham Elmattichi.

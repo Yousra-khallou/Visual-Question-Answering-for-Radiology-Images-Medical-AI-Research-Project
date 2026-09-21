@@ -1,6 +1,6 @@
 ﻿"""
-Script utilitaire pour le téléchargement automatique des poids MedVQA N6.
-Supporte le téléchargement direct via URL, Hugging Face Hub, ou Google Drive.
+Utility script for automated download of MedVQA N6 model weights.
+Supports Hugging Face Hub, Google Drive (gdown), and direct local destination paths.
 """
 
 import os
@@ -10,39 +10,39 @@ import sys
 DEFAULT_DEST = "model/best_n6.pth"
 
 def download_from_hf(repo_id: str, filename: str = "best_n6.pth", destination: str = DEFAULT_DEST):
-    """Téléchargement depuis Hugging Face Hub."""
+    """Download checkpoint from Hugging Face Model Hub."""
     try:
         from huggingface_hub import hf_hub_download
-        print(f"📥 Téléchargement depuis Hugging Face Hub ({repo_id}/{filename})...")
+        print(f"📥 Downloading checkpoint from Hugging Face Hub ({repo_id}/{filename})...")
         os.makedirs(os.path.dirname(destination), exist_ok=True)
         cached_path = hf_hub_download(repo_id=repo_id, filename=filename)
         import shutil
         shutil.copy(cached_path, destination)
-        print(f"✅ Poids enregistrés dans : {destination}")
+        print(f"✅ Weights saved successfully to: {destination}")
         return True
     except Exception as e:
-        print(f"❌ Erreur Hugging Face : {e}")
+        print(f"❌ Error downloading from Hugging Face: {e}")
         return False
 
 def download_from_gdrive(file_id: str, destination: str = DEFAULT_DEST):
-    """Téléchargement depuis Google Drive via gdown."""
+    """Download checkpoint from Google Drive using gdown."""
     try:
         import gdown
-        print(f"📥 Téléchargement depuis Google Drive (ID: {file_id})...")
+        print(f"📥 Downloading checkpoint from Google Drive (ID: {file_id})...")
         os.makedirs(os.path.dirname(destination), exist_ok=True)
         url = f"https://drive.google.com/uc?id={file_id}"
         gdown.download(url, destination, quiet=False)
-        print(f"✅ Poids enregistrés dans : {destination}")
+        print(f"✅ Weights saved successfully to: {destination}")
         return True
     except Exception as e:
-        print(f"❌ Erreur Google Drive : {e}")
+        print(f"❌ Error downloading from Google Drive: {e}")
         return False
 
 def main():
-    parser = argparse.ArgumentParser(description="Téléchargement des poids du modèle MedVQA N6")
-    parser.add_argument("--hf-repo", type=str, help="Identifiant du repo Hugging Face (ex: username/medvqa-n6)")
-    parser.add_argument("--gdrive-id", type=str, help="ID du fichier Google Drive partagé")
-    parser.add_argument("--dest", type=str, default=DEFAULT_DEST, help="Chemin de destination local")
+    parser = argparse.ArgumentParser(description="MedVQA N6 Model Weights Downloader")
+    parser.add_argument("--hf-repo", type=str, help="Hugging Face repo ID (e.g., username/medvqa-n6)")
+    parser.add_argument("--gdrive-id", type=str, help="Shared Google Drive File ID")
+    parser.add_argument("--dest", type=str, default=DEFAULT_DEST, help="Local destination file path")
 
     args = parser.parse_args()
 

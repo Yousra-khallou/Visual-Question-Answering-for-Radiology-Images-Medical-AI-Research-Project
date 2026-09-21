@@ -3,8 +3,8 @@ import torch.nn.functional as F
 
 class GradCAMViT:
     """
-    Explicabilité visuelle Grad-CAM pour l'architecture Vision Transformer (ViT).
-    Capture les activations et gradients au niveau de la couche de normalisation finale.
+    Grad-CAM Visual Explainability Module for Vision Transformers (ViT).
+    Captures layer activations and backward gradients at the final normalization layer.
     """
     def __init__(self, model):
         self.model = model
@@ -18,7 +18,7 @@ class GradCAMViT:
         )
 
     def remove_hooks(self):
-        """Détache les hooks pour libérer la mémoire."""
+        """Detach forward and backward hooks to release memory."""
         if hasattr(self, 'hook_f') and self.hook_f:
             self.hook_f.remove()
         if hasattr(self, 'hook_b') and self.hook_b:
@@ -32,8 +32,8 @@ class GradCAMViT:
         answer_type: int = 0
     ) -> torch.Tensor:
         """
-        Génère la carte d'attention Grad-CAM [B, 14, 14].
-        answer_type: 0 pour 'closed', 1 pour 'open'.
+        Generates normalized Grad-CAM attention heatmap [B, 14, 14].
+        answer_type: 0 for 'closed', 1 for 'open'.
         """
         self.model.eval()
         self.grads.clear()
@@ -46,14 +46,14 @@ class GradCAMViT:
         score.backward(retain_graph=True)
         
         if not self.grads or not self.acts:
-            raise RuntimeError("Impossible de capturer les gradients ou activations pour Grad-CAM.")
+            raise RuntimeError("Unable to extract gradients or activations for Grad-CAM.")
 
         weights = self.grads[0].mean(dim=1, keepdim=True)
         cam = F.relu((weights * self.acts[0]).sum(dim=-1)[:, 1:])
         B = cam.size(0)
         cam = cam.view(B, 14, 14)
         
-        # Normalisation Min-Max par batch
+        # Min-Max Normalization per batch item
         cam_min = cam.view(B, -1).min(dim=1)[0].view(B, 1, 1)
         cam_max = cam.view(B, -1).max(dim=1)[0].view(B, 1, 1)
         cam = (cam - cam_min) / (cam_max + 1e-8)

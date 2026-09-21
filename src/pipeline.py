@@ -20,8 +20,8 @@ CLOSED_KEYWORDS = {
 
 class MedVQAPipeline:
     """
-    Pipeline unifié d'inférence et d'explicabilité pour MedVQA N6.
-    Utilisé indifféremment par l'API Flask (Web) et l'interface Gradio.
+    Unified Inference and Explainability Pipeline for MedVQA N6.
+    Shared across Flask Web API and Gradio UI.
     """
     def __init__(
         self,
@@ -48,7 +48,7 @@ class MedVQAPipeline:
         self.closed2idx, self.idx2closed = {}, {}
         self.open2idx, self.idx2open = {}, {}
         self.is_loaded = False
-        self.load_message = "Modèle non chargé"
+        self.load_message = "Model not loaded"
 
     def load(self, force_reload: bool = False):
         if self.is_loaded and not force_reload:
@@ -61,11 +61,11 @@ class MedVQAPipeline:
 
         if missing_files:
             self.is_loaded = False
-            self.load_message = f"Fichiers de vocabulaire manquants : {missing_files}"
+            self.load_message = f"Missing vocabulary files: {missing_files}"
             return False, self.load_message
 
         try:
-            # 1. Chargement des vocabulaires
+            # 1. Load Vocabularies
             with open(self.vocab_closed_path, 'r', encoding='utf-8') as f:
                 vc = json.load(f)
                 self.closed2idx = vc['closed2idx']
@@ -79,17 +79,17 @@ class MedVQAPipeline:
             # 2. Tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(self.text_backbone)
 
-            # 3. Modèle
+            # 3. Model Architecture
             self.model = MedVQA_N6(
                 num_closed=len(self.closed2idx),
                 num_open=len(self.open2idx),
                 text_backbone=self.text_backbone
             ).to(self.device)
 
-            # 4. Chargement des poids
+            # 4. Model Checkpoint Weights
             if not os.path.exists(self.model_path):
                 self.is_loaded = False
-                self.load_message = f"Poids du modèle introuvables : '{self.model_path}'"
+                self.load_message = f"Model checkpoint not found: '{self.model_path}'"
                 return False, self.load_message
 
             checkpoint = torch.load(self.model_path, map_location=self.device)
@@ -101,12 +101,12 @@ class MedVQAPipeline:
             val_score = checkpoint.get('val_combined', 0.0) if isinstance(checkpoint, dict) else 0.0
 
             self.is_loaded = True
-            self.load_message = f"Modèle chargé sur {self.device} (Epoch: {epoch}, Score Val: {val_score:.1f}%)"
+            self.load_message = f"Model successfully loaded on {self.device} (Epoch: {epoch}, Val Score: {val_score:.1f}%)"
             return True, self.load_message
 
         except Exception as e:
             self.is_loaded = False
-            self.load_message = f"Erreur lors du chargement : {str(e)}"
+            self.load_message = f"Error loading model: {str(e)}"
             return False, self.load_message
 
     def predict(self, image: Image.Image, question: str, generate_cam: bool = True) -> dict:
@@ -116,17 +116,17 @@ class MedVQAPipeline:
                 return {"error": msg}
 
         if image is None:
-            return {"error": "Aucune image fournie."}
+            return {"error": "No image provided."}
 
         question = (question or "").strip()
         if not question:
-            return {"error": "Aucune question fournie."}
+            return {"error": "No question provided."}
 
-        # 1. Prétraitement de l'image
+        # 1. Image Preprocessing
         rgb_image = image.convert('RGB')
         img_t = self.transform(rgb_image).unsqueeze(0).to(self.device)
 
-        # 2. Tokenisation de la question
+        # 2. Text Tokenization
         tok = self.tokenizer(
             [question],
             padding=True,
@@ -137,7 +137,7 @@ class MedVQAPipeline:
         input_ids = tok['input_ids'].to(self.device)
         attn_mask = tok['attention_mask'].to(self.device)
 
-        # 3. Inférence PyTorch
+        # 3. Model Forward Pass
         with torch.no_grad():
             logits_c, logits_o = self.model(img_t, input_ids, attn_mask)
 
@@ -162,7 +162,7 @@ class MedVQAPipeline:
         best_open_ans = top3_open[0]['answer'] if top3_open else "?"
         best_open_conf = top3_open[0]['confidence'] if top3_open else 0.0
 
-        # Heuristique de sélection de réponse (Closed vs Open)
+        # Closed vs Open Selection Heuristic
         is_closed = (best_closed_conf > 60.0) and (best_closed_ans.lower() in CLOSED_KEYWORDS)
         answer_type_idx = 0 if is_closed else 1
         best_answer = best_closed_ans if is_closed else best_open_ans
@@ -170,7 +170,7 @@ class MedVQAPipeline:
 
         result = {
             "answer": best_answer,
-            "answer_type": "Closed (binaire/oui-non)" if is_closed else "Open (clinique)",
+            "answer_type": "Closed (binary/yes-no)" if is_closed else "Open (clinical entity)",
             "confidence": confidence,
             "top3_closed": top3_closed,
             "top3_open": top3_open,
@@ -178,7 +178,7 @@ class MedVQAPipeline:
             "cam_pil": None,
         }
 
-        # 4. Génération Grad-CAM
+        # 4. Grad-CAM Explainability
         if generate_cam:
             try:
                 gcam = GradCAMViT(self.model)
@@ -195,7 +195,6 @@ class MedVQAPipeline:
                 overlay = np.clip(img_resized * 0.6 + heatmap * 0.4, 0, 1)
                 overlay_pil = Image.fromarray((overlay * 255).astype(np.uint8))
 
-                # Image Grad-CAM seule & Superposée
                 buf = io.BytesIO()
                 overlay_pil.save(buf, format='JPEG', quality=90)
                 result['cam_base64'] = base64.b64encode(buf.getvalue()).decode('utf-8')
